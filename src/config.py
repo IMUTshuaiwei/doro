@@ -1,5 +1,5 @@
 import os
-from dotenv import load_dotenv
+import configparser
 
 class Config:
     # 预定义主题
@@ -42,65 +42,87 @@ class Config:
     }
 
     def __init__(self):
-        # 尝试以不同编码加载环境变量
-        encodings = ['utf-8', 'gbk', 'gb2312', 'gb18030']
-        for encoding in encodings:
-            try:
-                load_dotenv(encoding=encoding)
-                break
-            except UnicodeDecodeError:
-                continue
-            except Exception as e:
-                print(f"加载环境变量时出错: {str(e)}")
-                break
+        self.config_path = "config.ini"
+        self.parser = configparser.ConfigParser()
 
-        # DeepSeek API配置
-        self.deepseek_api_key = os.getenv("DEEPSEEK_API_KEY", "")
-        self.deepseek_api_url = os.getenv("DEEPSEEK_API_URL", "https://api.deepseek.com/v1")
+        # 默认配置
+        self.default_config = {
+            "WINDOW": {
+                "WINDOW_WIDTH": "200",
+                "WINDOW_HEIGHT": "200",
+            },
+            "ANIMATION": {
+                "ANIMATION_FPS": "30",
+            },
+            "RANDOM": {
+                "RANDOM_INTERVAL": "5"
+            },
+            "INFO": {
+                "SHOW_INFO": "True"
+            },
+            "THEME": {
+                "CURRENT_THEME": "粉色主题"
+            },
+            "TRAY": {
+                "TRAY_ICON": os.path.join(os.path.dirname(os.path.dirname(__file__)), "resources", "icons", "favicon.ico")
+            },
+            "WORKSPACE": {
+                "ALLOW_RANDOM_MOVEMENT": "True"
+            }
+        }
+
+        # 如果没有 config.ini 则创建
+        if not os.path.exists(self.config_path):
+            self._create_default_config()
+
+        self.parser.read(self.config_path, encoding="utf-8")
+
 
         # 窗口配置
-        self.window_width = int(os.getenv("WINDOW_WIDTH", "200"))
-        self.window_height = int(os.getenv("WINDOW_HEIGHT", "200"))
-        self.window_title = "桌面宠物"
+        self.window_width = self.parser.getint("WINDOW", "WINDOW_WIDTH", fallback=200)
+        self.window_height = self.parser.getint("WINDOW", "WINDOW_HEIGHT", fallback=200)
 
         # 动画配置
-        self.animation_fps = int(os.getenv("ANIMATION_FPS", "30"))
-        self.animation_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "resources", "TF", "body")
+        self.animation_fps = self.parser.getint("ANIMATION", "ANIMATION_FPS", fallback=30)
         self.frame_delay = 1000 // self.animation_fps  # 每帧延迟（毫秒）
 
         # 随机切换配置
-        self.random_interval = int(os.getenv("RANDOM_INTERVAL", "5"))  # 秒
+        self.random_interval = self.parser.getint("RANDOM", "RANDOM_INTERVAL", fallback=5)  # 秒
 
         # 信息框配置
-        self.show_info = os.getenv("SHOW_INFO", "True").lower() == "true"
-
-        # 对话窗口配置
-        self.enable_chat = os.getenv("ENABLE_CHAT", "True").lower() == "true"
-        self.chat_visible = os.getenv("CHAT_VISIBLE", "True").lower() == "true"
+        self.show_info = self.parser.getboolean("INFO", "SHOW_INFO", fallback=True)
 
         # 主题配置
-        self.current_theme = os.getenv("CURRENT_THEME", "粉色主题")
+        self.current_theme = self.parser.get("THEME", "CURRENT_THEME", fallback="粉色主题")
 
         # 托盘配置
-        self.tray_icon = os.path.join(os.path.dirname(os.path.dirname(__file__)), "resources", "icons", "favicon.ico")
+        self.tray_icon = self.parser.get("TRAY", "TRAY_ICON", fallback=os.path.join(os.path.dirname(os.path.dirname(__file__)), "resources", "icons", "favicon.ico"))
+
+        # 工作区配置
+        self.allow_random_movement = self.parser.getboolean("WORKSPACE", "ALLOW_RANDOM_MOVEMENT", fallback=True)
+
+    def _create_default_config(self):
+        for section, options in self.default_config.items():
+            self.parser[section] = options
+        with open(self.config_path, "w", encoding="utf-8") as f:
+            self.parser.write(f)
 
     def get_theme_colors(self):
         """获取当前主题的颜色"""
         return self.THEMES.get(self.current_theme, self.THEMES["粉色主题"])
 
     def save(self):
-        """保存配置到环境变量文件"""
+        """保存配置到 config.ini 文件"""
+        # 更新 parser 对象
+        self.parser.set("WINDOW", "WINDOW_WIDTH", str(self.window_width))
+        self.parser.set("WINDOW", "WINDOW_HEIGHT", str(self.window_height))
+        self.parser.set("ANIMATION", "ANIMATION_FPS", str(self.animation_fps))
+        self.parser.set("RANDOM", "RANDOM_INTERVAL", str(self.random_interval))
+        self.parser.set("INFO", "SHOW_INFO", str(self.show_info))
+        self.parser.set("THEME", "CURRENT_THEME", self.current_theme)
+        self.parser.set("WORKSPACE", "ALLOW_RANDOM_MOVEMENT", str(self.allow_random_movement))
         try:
-            with open(".env", "w", encoding='utf-8') as f:
-                f.write(f"DEEPSEEK_API_KEY={self.deepseek_api_key}\n")
-                f.write(f"DEEPSEEK_API_URL={self.deepseek_api_url}\n")
-                f.write(f"WINDOW_WIDTH={self.window_width}\n")
-                f.write(f"WINDOW_HEIGHT={self.window_height}\n")
-                f.write(f"ANIMATION_FPS={self.animation_fps}\n")
-                f.write(f"RANDOM_INTERVAL={self.random_interval}\n")
-                f.write(f"SHOW_INFO={self.show_info}\n")
-                f.write(f"ENABLE_CHAT={self.enable_chat}\n")
-                f.write(f"CHAT_VISIBLE={self.chat_visible}\n")
-                f.write(f"CURRENT_THEME={self.current_theme}\n")
+            with open(self.config_path, "w", encoding="utf-8") as f:
+                self.parser.write(f)
         except Exception as e:
-            print(f"保存环境变量时出错: {str(e)}")
+            print(f"保存配置文件时出错: {str(e)}")
