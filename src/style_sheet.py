@@ -9,7 +9,7 @@ def generate_preview_css(sheet: StyleSheetParam) -> str:
         """
 
 
-def generate_message_css(colors: StyleSheetParam) -> str:
+def generate_pet_info_css(colors: StyleSheetParam) -> str:
     return f"""
             QWidget#PetInfoWindowInfoWidget {{
                 background-color: {colors['background']};
@@ -42,6 +42,28 @@ def generate_menu_css() -> str:
             background-color: #87cefa;
             color: #222;
         }
+    """
+
+
+def generate_messagebox_css() -> str:
+    return """
+    QMessageBox {
+        background-color: #fdf5fe; /* 淡灰色背景 */
+    }
+    QLabel { /* 调整文本标签样式 */
+        color: #ef5aad; /* 深灰色文本 */
+        font-size: 13px; /* 稍大字体 */
+    }
+    QPushButton { /* 按钮样式 */
+        background-color: #f771c8;
+        color: white;
+        padding: 5px 15px;
+        border-radius: 5px;
+        min-width: 60px;
+    }
+    QPushButton:hover {
+        background-color: #f282cb;
+    }
     """
 
 

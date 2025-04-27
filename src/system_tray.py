@@ -1,5 +1,4 @@
 import os
-from typing import Optional
 
 from PySide6.QtGui import QIcon, QAction
 from PySide6.QtWidgets import (
@@ -25,7 +24,7 @@ from .style_sheet import generate_preview_css, generate_full_css
 
 class SettingsDialog(QDialog):
 
-    def __init__(self, config: Config, parent: Optional[PetWindow] = None):
+    def __init__(self, config: Config, parent: PetWindow):
         super().__init__(parent)
         self.config: Config = config
         self.setWindowTitle("设置")
@@ -48,7 +47,7 @@ class SettingsDialog(QDialog):
         self.theme_combo = QComboBox()
         for theme_name in self.config.THEMES.keys():
             self.theme_combo.addItem(theme_name)
-        self.theme_combo.setCurrentText(self.config.current_theme)
+        self.theme_combo.setCurrentText(self.config.config["THEME"]["DEFAULT_THEME"])
         self.theme_combo.currentTextChanged.connect(self.theme_changed)
         theme_layout.addWidget(self.theme_combo)
 
@@ -66,10 +65,10 @@ class SettingsDialog(QDialog):
         size_layout = QHBoxLayout()
         self.width_spin = QSpinBox()
         self.width_spin.setRange(100, 1000)
-        self.width_spin.setValue(config.window_width)
+        self.width_spin.setValue(config.config["WINDOW"]["WINDOW_WIDTH"])
         self.height_spin = QSpinBox()
         self.height_spin.setRange(100, 1000)
-        self.height_spin.setValue(config.window_height)
+        self.height_spin.setValue(config.config["WINDOW"]["WINDOW_HEIGHT"])
         size_layout.addWidget(self.width_spin)
         size_layout.addWidget(QLabel("x"))
         size_layout.addWidget(self.height_spin)
@@ -78,24 +77,26 @@ class SettingsDialog(QDialog):
         # 帧率设置
         self.fps_spin = QSpinBox()
         self.fps_spin.setRange(1, 60)
-        self.fps_spin.setValue(config.animation_fps)
+        self.fps_spin.setValue(config.config["ANIMATION"]["ANIMATION_FPS"])
         form_layout.addRow("动画帧率 (FPS):", self.fps_spin)
 
         # 随机切换时间设置
         self.random_interval_spin = QSpinBox()
         self.random_interval_spin.setRange(1, 60)
-        self.random_interval_spin.setValue(config.random_interval)
+        self.random_interval_spin.setValue(config.config["RANDOM"]["RANDOM_INTERVAL"])
         self.random_interval_spin.setSuffix(" 秒")
         form_layout.addRow("随机切换间隔:", self.random_interval_spin)
 
         # 信息框显示设置
         self.show_info_checkbox = QCheckBox()
-        self.show_info_checkbox.setChecked(config.show_info)
+        self.show_info_checkbox.setChecked(config.config["INFO"]["SHOW_INFO"])
         form_layout.addRow("显示系统信息:", self.show_info_checkbox)
 
         # 随机移动设置
         self.allow_random_movement_checkbox = QCheckBox()
-        self.allow_random_movement_checkbox.setChecked(config.allow_random_movement)
+        self.allow_random_movement_checkbox.setChecked(
+            config.config["WORKSPACE"]["ALLOW_RANDOM_MOVEMENT"]
+        )
         form_layout.addRow("允许自主随机运动:", self.allow_random_movement_checkbox)
 
         main_layout.addLayout(form_layout)
@@ -125,7 +126,7 @@ class SettingsDialog(QDialog):
 
     def theme_changed(self, theme_name: str):
         """主题改变时的处理"""
-        self.config.current_theme = theme_name
+        self.config.config["THEME"]["DEFAULT_THEME"] = theme_name
         self.update_theme()
         self.theme_preview.setStyleSheet(
             generate_preview_css(self.config.get_theme_colors())
@@ -143,9 +144,37 @@ class SettingsDialog(QDialog):
         self.config.get("WORKSPACE")[
             "ALLOW_RANDOM_MOVEMENT"
         ] = self.allow_random_movement_checkbox.isChecked()
-
         # 保存到环境变量文件
         self.config.save()
+
+        parent_window: PetWindow = self.parent()  # type: ignore[assignment]
+
+        # 更新窗口大小
+        parent_window.setFixedSize(
+            self.config.config["WINDOW"]["WINDOW_WIDTH"],
+            self.config.config["WINDOW"]["WINDOW_HEIGHT"],
+        )
+
+        # 更新动画帧率
+        parent_window.animation_timer.setInterval(
+            1000 // self.config.config["ANIMATION"]["ANIMATION_FPS"]
+        )
+
+        # 更新随机切换间隔
+        parent_window.random_move_timer.setInterval(
+            self.config.config["RANDOM"]["RANDOM_INTERVAL"] * 1000
+        )
+
+        # 更新信息框显示状态
+        parent_window.set_info_visible(self.config.config["INFO"]["SHOW_INFO"])
+
+        # 更新对话功能状态
+        # TODO: 这里原版本里是有这个的, 但似乎并未实现(NotImplemented)
+        # parent_window.set_chat_enabled(self.config.enable_chat)
+
+        # 更新主题
+        parent_window.update_theme()
+
         # 显示保存成功提示
         QMessageBox.information(self, "提示", "设置已保存！")
 
@@ -156,8 +185,8 @@ class SettingsDialog(QDialog):
 class SystemTray:
 
     def __init__(self, pet_window: PetWindow, config: Config) -> None:
-        self.pet_window = pet_window
-        self.config = config
+        self.pet_window: PetWindow = pet_window
+        self.config: Config = config
 
         # 创建系统托盘图标
         self.tray_icon: QSystemTrayIcon = QSystemTrayIcon()

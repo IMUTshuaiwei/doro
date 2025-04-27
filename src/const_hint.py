@@ -1,4 +1,4 @@
-from typing import TypedDict
+from typing import Literal, TypedDict, Union
 
 
 class WindowParam(TypedDict):
@@ -55,6 +55,27 @@ class ConfigParam(TypedDict):
     THEME: ThemeParam
     TRAY: TrayParam
     WORKSPACE: WorkspaceParam
+
+
+ConfigLiteral = Literal[
+    "WINDOW",
+    "ANIMATION",
+    "RANDOM",
+    "INFO",
+    "THEME",
+    "TRAY",
+    "WORKSPACE",
+]
+
+ChildConfigUnion = Union[
+    WindowParam,
+    AnimationParam,
+    RandomParam,
+    InfoParam,
+    ThemeParam,
+    TrayParam,
+    WorkspaceParam,
+]
 
 
 StyleSheetParam = TypedDict(

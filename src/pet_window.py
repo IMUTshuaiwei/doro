@@ -4,7 +4,7 @@ import time
 from typing import Dict, List
 
 import psutil
-from PySide6.QtCore import Qt, QTimer, QSize, QPoint, QUrl, QEvent
+from PySide6.QtCore import QRect, Qt, QTimer, QSize, QPoint, QUrl, QEvent
 from PySide6.QtGui import QMovie, QIcon, QAction, QMouseEvent
 from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput
 from PySide6.QtWidgets import (
@@ -18,7 +18,11 @@ from PySide6.QtWidgets import (
 )
 
 from .config import Config
-from .style_sheet import generate_menu_css, generate_message_css
+from .style_sheet import (
+    generate_menu_css,
+    generate_pet_info_css,
+    generate_messagebox_css,
+)
 
 
 class PetWindow(QMainWindow):
@@ -78,7 +82,10 @@ class PetWindow(QMainWindow):
 
         # 动画显示标签（左侧）
         self.animation_label = QLabel()
-        self.animation_label.setFixedSize(config.window_width, config.window_height)
+        self.animation_label.setFixedSize(
+            config.config["WINDOW"]["WINDOW_WIDTH"],
+            config.config["WINDOW"]["WINDOW_HEIGHT"],
+        )
         self.animation_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         # 将动画和信息部件添加到主布局
@@ -87,9 +94,11 @@ class PetWindow(QMainWindow):
 
         # 计算并设置窗口总大小
         total_width = (
-            config.window_width + self.info_widget.width() + self.main_layout.spacing()
+            config.config["WINDOW"]["WINDOW_WIDTH"]
+            + self.info_widget.width()
+            + self.main_layout.spacing()
         )
-        total_height = config.window_height
+        total_height = config.config["WINDOW"]["WINDOW_HEIGHT"]
         self.setFixedSize(total_width, total_height)
 
         music_path = os.path.join(
@@ -143,10 +152,12 @@ class PetWindow(QMainWindow):
         self.random_move_timer.timeout.connect(self.start_random_movement)
         # 根据配置决定是否启动随机移动
         if self.config.allow_random_movement:
-            self.random_move_timer.start(self.config.random_interval * 1000)
+            self.random_move_timer.start(
+                self.config.get("RANDOM")["RANDOM_INTERVAL"] * 1000
+            )
 
         # 屏幕几何信息
-        self.screen_geometry = self.screen().availableGeometry()
+        self.screen_geometry: QRect = self.screen().availableGeometry()
 
         # 应用主题
         self.update_theme()
@@ -187,27 +198,7 @@ class PetWindow(QMainWindow):
         if os.path.exists(icon_path):
             msg_box.setWindowIcon(QIcon(icon_path))  # 为弹窗也设置图标
         msg_box.setStandardButtons(QMessageBox.StandardButton.Ok)  # 只显示“确定”按钮
-        msg_box.setStyleSheet(
-            """
-            QMessageBox {
-                background-color: #fdf5fe; /* 淡灰色背景 */
-            }
-            QLabel { /* 调整文本标签样式 */
-                color: #ef5aad; /* 深灰色文本 */
-                font-size: 13px; /* 稍大字体 */
-            }
-            QPushButton { /* 按钮样式 */
-                background-color: #f771c8;
-                color: white;
-                padding: 5px 15px;
-                border-radius: 5px;
-                min-width: 60px;
-            }
-            QPushButton:hover {
-                background-color: #f282cb;
-            }
-        """
-        )
+        msg_box.setStyleSheet(generate_messagebox_css())
         msg_box.exec()  # 显示弹窗
 
     def load_gif_animation(self):
@@ -229,7 +220,10 @@ class PetWindow(QMainWindow):
         if gif_path not in self.gif_cache:
             movie = QMovie(gif_path)
             movie.setScaledSize(
-                QSize(self.config.window_width, self.config.window_height)
+                QSize(
+                    self.config.config["WINDOW"]["WINDOW_WIDTH"],
+                    self.config.config["WINDOW"]["WINDOW_HEIGHT"],
+                )
             )
             self.gif_cache[gif_path] = movie
         else:
@@ -238,6 +232,7 @@ class PetWindow(QMainWindow):
         self.movie: QMovie = movie
         self.animation_label.setMovie(self.movie)
         self.movie.start()
+        self.movie.finished.connect(self.return_to_normal)
 
     def play_random_normal_gif(self):
         """播放随机普通状态GIF"""
@@ -248,18 +243,19 @@ class PetWindow(QMainWindow):
 
     def set_info_visible(self, visible: bool):
         """设置信息窗口可见性，并动态调整窗口大小"""
-        self.info_visible = visible
+        print(f"设置信息窗口可见性: {visible}")
+        self.info_visible: bool = visible
         self.info_widget.setVisible(visible)
         # 动态调整窗口宽度，防止信息栏隐藏后动画被挤压
         if visible:
             total_width = (
-                self.config.window_width
+                self.config.config["WINDOW"]["WINDOW_WIDTH"]
                 + self.info_widget.width()
                 + self.main_layout.spacing()
             )
         else:
-            total_width = self.config.window_width
-        total_height = self.config.window_height
+            total_width = self.config.config["WINDOW"]["WINDOW_WIDTH"]
+        total_height = self.config.config["WINDOW"]["WINDOW_HEIGHT"]
         self.setFixedSize(total_width, total_height)
 
     def decrease_hunger(self):
@@ -320,7 +316,7 @@ class PetWindow(QMainWindow):
         colors = self.config.get_theme_colors()
 
         # 设置信息窗口样式
-        self.info_widget.setStyleSheet(generate_message_css(colors))
+        self.info_widget.setStyleSheet(generate_pet_info_css(colors))
         self.info_widget.setObjectName("PetInfoWindowInfoWidget")
 
     def start_random_movement(self):
@@ -388,6 +384,7 @@ class PetWindow(QMainWindow):
 
     def return_to_normal(self):
         """返回普通状态"""
+        self.movie.stop()
         self.current_state = "normal"
         self.play_random_normal_gif()
 

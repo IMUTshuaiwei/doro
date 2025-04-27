@@ -17,36 +17,19 @@ class Config:
             Config.PATH_CONFIG["CONFIG"]["RELATIVE_PATH"]
         )
 
-        # 窗口配置
-        self.window_width = self.config["WINDOW"].get("WINDOW_WIDTH", 200)
-        self.window_height = self.config["WINDOW"].get("WINDOW_HEIGHT", 200)
-
-        # 动画配置
-        self.animation_fps = self.config["ANIMATION"].get("ANIMATION_FPS", 30)
-        self.frame_delay = 1000 // self.animation_fps  # 每帧延迟（毫秒）
-
-        # 随机切换配置
-        self.random_interval = self.config["RANDOM"].get("RANDOM_INTERVAL", 5)
-
-        # 信息框配置
-        self.show_info = self.config["INFO"].get("SHOW_INFO", True)
-
-        # 主题配置
-        self.current_theme = self.config["THEME"].get("DEFAULT_THEME", "粉色主题")
-
         # 托盘配置
-        default_ico_path = os.path.join(
+        default_ico_path: str = os.path.join(
             os.path.dirname(os.path.dirname(__file__)),
             "resources",
             "icons",
             "favicon.ico",
         )
-        self.tray_icon = self.config["TRAY"].get("TRAY_ICON") or Config.PATH_CONFIG[
-            "ICON"
-        ].get("RELATIVE_PATH", default_ico_path)
+        self.tray_icon: str = self.config["TRAY"].get(
+            "TRAY_ICON"
+        ) or Config.PATH_CONFIG["ICON"].get("RELATIVE_PATH", default_ico_path)
 
         # 工作区配置
-        self.allow_random_movement = self.config["WORKSPACE"].get(
+        self.allow_random_movement: bool = self.config["WORKSPACE"].get(
             "ALLOW_RANDOM_MOVEMENT", True
         )
 
@@ -74,7 +57,9 @@ class Config:
         self,
     ) -> StyleSheetParam:
         """获取当前主题的颜色"""
-        return StyleSheetParam(Config.THEMES.get(self.current_theme, {}))
+        return StyleSheetParam(
+            Config.THEMES.get(self.config["THEME"]["DEFAULT_THEME"], {})
+        )
 
     def get(
         self,
