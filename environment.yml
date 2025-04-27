@@ -23,8 +23,11 @@ dependencies:
       - certifi==2025.4.26
       - charset-normalizer==3.4.1
       - idna==3.10
+      - numpy==2.2.5
+      - opencv-python==4.11.0.86
       - packaging==25.0
       - pefile==2023.2.7
+      - pillow==11.2.1
       - psutil==7.0.0
       - pyinstaller==6.13.0
       - pyinstaller-hooks-contrib==2025.3
