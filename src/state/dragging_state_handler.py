@@ -1,4 +1,3 @@
-import random
 from typing import Optional
 from PySide6.QtCore import Qt, QEvent, QTimer, QPoint
 from PySide6.QtGui import QMouseEvent
@@ -23,9 +22,9 @@ class DraggingStateHandler(StateHandler):
             return False
         self.is_dragging = True
         self.debounce_end_dragging()
-        self.main_layer.pet_window.play_gif(
-            random.choice(self.main_layer.resource_manager.get_gif("Drag"))
-        )
+        gif_path = self.main_layer.random_gif("Drag")
+        if gif_path:
+            self.main_layer.pet_window.play_gif(gif_path)
         self.old_pos = None
         self.state_machine.timers["monitor"].stop()
         return True

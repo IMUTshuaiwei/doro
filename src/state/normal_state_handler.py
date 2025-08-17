@@ -1,5 +1,4 @@
 import os
-import random
 from PySide6.QtCore import QEvent, Qt, QTimer
 from PySide6.QtGui import QMouseEvent, QIcon
 from PySide6.QtWidgets import QMessageBox
@@ -26,8 +25,9 @@ class NormalStateHandler(StateHandler):
         self.normal_timer.start(
             1000 * self.main_layer.config.config["Random"]["Interval"]
         )
-        gif_path = random.choice(self.main_layer.resource_manager.get_gif("Common"))
-        self.main_layer.pet_window.play_gif(gif_path)
+        gif_path = self.main_layer.random_gif("Common")
+        if gif_path:
+            self.main_layer.pet_window.play_gif(gif_path)
 
     def on_exit(self):
         self.normal_timer.stop()
@@ -63,8 +63,9 @@ class NormalStateHandler(StateHandler):
 
     def change_gif(self):
         if self.state_machine.current_state == PetState.NORMAL:
-            gif_path = random.choice(self.main_layer.resource_manager.get_gif("Common"))
-            self.main_layer.pet_window.play_gif(gif_path)
+            gif_path = self.main_layer.random_gif("Common")
+            if gif_path:
+                self.main_layer.pet_window.play_gif(gif_path)
 
     def handle_about(self):
         """处理关于"""
