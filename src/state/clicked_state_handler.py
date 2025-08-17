@@ -21,9 +21,7 @@ class ClickedStateHandler(StateHandler):
             self.main_layer.pet_window.play_gif(gif_path)
         if os.path.exists(Config.PATH_CONFIG["Resources"]["Music"]["DoubleClick"]):
             self.main_layer.pet_window.audio_player.setSource(
-                QUrl.fromLocalFile(
-                    self.main_layer.random_music("DoubleClick") or ""
-                )
+                QUrl.fromLocalFile(self.main_layer.random_music("DoubleClick") or "")
             )
             self.main_layer.pet_window.audio_player.play()
             self.click_end_timer.start(18000)
