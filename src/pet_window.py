@@ -3,7 +3,7 @@ import random
 from typing import Dict, List, Optional, TYPE_CHECKING
 from PySide6.QtCore import Qt, QSize, QUrl, QEvent, Signal
 from PySide6.QtGui import QMovie, QIcon, QTransform
-from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput
+from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput, QMediaDevices
 from PySide6.QtWidgets import (
     QMainWindow,
     QLabel,
@@ -117,7 +117,8 @@ class PetWindow(QMainWindow):
     def _setup_audio(self):
         """初始化音频系统"""
         self.audio_player = QMediaPlayer()
-        self.audio_output = QAudioOutput()
+        default_device = QMediaDevices.defaultAudioOutput()
+        self.audio_output = QAudioOutput(default_device)
         self.audio_player.setAudioOutput(self.audio_output)
 
         if os.path.exists(Config.PATH_CONFIG["Resources"]["Music"]["DoubleClick"]):
