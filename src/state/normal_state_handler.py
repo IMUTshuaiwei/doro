@@ -1,7 +1,7 @@
 import os
 from PySide6.QtCore import QEvent, Qt, QTimer
 from PySide6.QtGui import QMouseEvent, QIcon
-from PySide6.QtWidgets import QMessageBox
+from PySide6.QtWidgets import QMessageBox, QApplication
 from ..setting_gui import SettingsDialog
 from .base_state import StateHandler, menu_item, PetState
 from ..style_sheet import (
@@ -13,6 +13,7 @@ from ..pages import get_page
 
 @menu_item("关于Doro", "handle_about", isGlobal=0)
 @menu_item("设置", "handle_settings", separator=True, isGlobal=1)
+@menu_item("退出桌宠", "handle_quit", isGlobal=1)
 class NormalStateHandler(StateHandler):
     """正常状态处理器"""
 
@@ -74,6 +75,14 @@ class NormalStateHandler(StateHandler):
     def handle_settings(self):
         """处理设置"""
         self.show_settings()
+
+    def handle_quit(self):
+        print("Doro will miss you!")
+
+        # 获取程序实例
+        app = QApplication.instance()
+        if app is not None:
+            app.quit()
 
     def show_settings(self):
         """显示设置对话框"""
