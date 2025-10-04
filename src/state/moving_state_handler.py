@@ -81,11 +81,12 @@ class MovingStateHandler(StateHandler):
     def prepare_movement(self):
         """准备移动动画和方向，自动适配 GIF 方向"""
         self.move_direction = random.choice(["left", "right", "up", "down"])
-        move_gif = random.choice(self.main_layer.resource_manager.get_gif("Move"))
+        move_gif = self.main_layer.random_gif("Move")
 
         # 右移时镜像
         mirror = self.move_direction == "right"
-        self.main_layer.pet_window.play_gif(move_gif, mirror=mirror)
+        if move_gif:
+            self.main_layer.pet_window.play_gif(move_gif, mirror=mirror)
 
         move_duration = random.randint(5000, 10000)
         self.is_moving = True

@@ -1,4 +1,3 @@
-import random
 from PySide6.QtCore import QTimer, QEvent, Qt
 from PySide6.QtGui import QMouseEvent
 from PySide6.QtWidgets import QLabel
@@ -31,9 +30,9 @@ class HungryStateHandler(StateHandler):
             return False
         elif self.state_machine.state_stack[-1] == PetState.DRAGGING:
             return False
-        self.main_layer.pet_window.play_gif(
-            random.choice(self.main_layer.resource_manager.get_gif("Hungry"))
-        )
+        gif_path = self.main_layer.random_gif("Hungry")
+        if gif_path:
+            self.main_layer.pet_window.play_gif(gif_path)
 
     def on_exit(self):
         return super().on_exit()
