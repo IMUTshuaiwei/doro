@@ -124,12 +124,10 @@ class PetWindow(QMainWindow):
 
     def _setup_window(self):
         self.setWindowTitle("Doro")
+        # 设置透明背景（无边框模式必需）
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
-        self.setWindowFlags(
-            Qt.WindowType.Tool
-            | Qt.WindowType.FramelessWindowHint
-            | Qt.WindowType.WindowStaysOnTopHint
-        )
+        # 窗口标志将在 update_config() 中根据配置正确设置
+        # 这里不再硬编码，避免初次加载和保存后状态不一致
         self._update_window_size()
 
     def _load_gif_files(self):
@@ -173,7 +171,7 @@ class PetWindow(QMainWindow):
         show_info = self.config.config["Info"]["ShowInfo"]
         if show_info:
             self.info_widget.show()
-            info_w = self.info_widget.sizeHint().width()
+            info_w = self.info_widget.width()
             total_width = pet_w + self.main_layout.spacing() + gap_cfg + info_w
             total_height = max(pet_h, self.info_widget.sizeHint().height())
             self.gap_spacer.changeSize(

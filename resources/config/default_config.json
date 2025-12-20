@@ -12,7 +12,8 @@
     "Interval": 5
   },
   "Info": {
-    "ShowInfo": true
+    "ShowInfo": true,
+    "Gap": 0
   },
   "Theme": {
     "DefaultTheme": "粉色主题"

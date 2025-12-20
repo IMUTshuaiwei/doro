@@ -164,12 +164,6 @@ class SettingsDialog(QDialog):
 
         self.parent_window: PetWindow = self.parent()  # type: ignore[assignment]
 
-        # 更新窗口大小
-        self.parent_window.setFixedSize(
-            self.config.config["Window"]["Width"],
-            self.config.config["Window"]["Height"],
-        )
-
         # # 更新随机切换间隔
         # parent_window.random_move_timer.setInterval(
         #     self.config.config["Random"]["Interval"] * 1000
